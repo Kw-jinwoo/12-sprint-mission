@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.UUID;
 
 public class JCFUserService implements UserService {
-
     private final List<User> data;
 
     public JCFUserService() {
@@ -16,9 +15,8 @@ public class JCFUserService implements UserService {
     }
 
     @Override
-    public User save(User user) {
+    public void create(User user) {
         data.add(user);
-        return user;
     }
 
     @Override
