@@ -9,17 +9,15 @@ public class Message {
 
     private String content;
     private boolean isEdited;
-    private User sendUser;
-    private Channel channel;
+    private final User sendUser;
 
-    public Message(String content, User sendUser, Channel channel) {
+    public Message(String content, User sendUser) {
         id = UUID.randomUUID();
         createdAt = System.currentTimeMillis();
         updatedAt = System.currentTimeMillis();
         this.content = content;
         isEdited = false;
         this.sendUser = sendUser;
-        this.channel = channel;
     }
 
     public UUID getId() { return id; }
@@ -28,7 +26,6 @@ public class Message {
     public String getContent() { return content; }
     public boolean isEdited() { return isEdited; }
     public User getSendUser() { return sendUser; }
-    public Channel getChannel() { return channel; }
 
     public void update(String content) {
         this.content = content;
@@ -45,7 +42,6 @@ public class Message {
                 ", content='" + content + '\'' +
                 ", isEdited=" + isEdited +
                 ", sendUser=" + sendUser +
-                ", channel=" + channel +
                 '}';
     }
 }

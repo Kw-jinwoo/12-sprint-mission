@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.entity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class Channel {
@@ -42,6 +43,29 @@ public class Channel {
         updatedAt = System.currentTimeMillis();
     }
 
+    public void addUser(User user) {
+        userList.add(user);
+    }
+
+    public void deleteUser(User user) {
+        if (userList.contains(user)) {
+            userList.remove(user);
+        } else {
+            System.out.println("삭제실패 : 입력된 user(" + user + ")는 해당 Channel에 없습니다");
+        }
+    }
+
+    public void addMessage(Message message) {
+        messageList.add(message);
+    }
+
+    public void deleteMessage(Message message) {
+        if (messageList.contains(message)) {
+            messageList.remove(message);
+        } else {
+            System.out.println("삭제실패 : 입력된 message(" + message + ")는 해당 Channel에 없습니다");
+        }
+    }
 
     @Override
     public String toString() {

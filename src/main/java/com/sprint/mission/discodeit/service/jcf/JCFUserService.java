@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.service.UserService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class JCFUserService implements UserService {
@@ -15,21 +16,41 @@ public class JCFUserService implements UserService {
     }
 
     @Override
-    public void create(User user) {
+    public UUID create(User user) {
         data.add(user);
+        return user.getId();
     }
 
     @Override
-    public User findById(UUID id) {
-        for(User user : data){
-            if(user.getId().equals(id)) return user;
+    public Optional<User> findById(UUID id) {
+        for (User user : data) {
+            if(user.getId().equals(id)) return Optional.of(user);
         }
-//        data.stream().filter(idata -> idata.getId().equals(id));
-        return null;
+        return Optional.empty();
     }
 
     @Override
-    public List<User> findAll() {
-        return data;
+    public Optional<List<User>> findAll() {
+        if (!data.isEmpty()) {
+            return Optional.of(data);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public void updateById(UUID id, String username, String email, String password, String nickname) {
+        findById(id).ifPresentOrElse(
+                (user) -> user.update(username, email, password, nickname),
+                () -> System.out.println("수정실패 : 입력된 id(" + id + ")에 해당하는 User가 없습니다")
+        );
+    }
+
+    @Override
+    public void deleteById(UUID id) {
+        findById(id).ifPresentOrElse(
+                data::remove,
+                () -> System.out.println("삭제실패 : 입력된 id(" + id + ")에 해당하는 User가 없습니다")
+        );
     }
 }

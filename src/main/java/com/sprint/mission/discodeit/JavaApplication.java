@@ -17,6 +17,21 @@ public class JavaApplication {
         userService.create(user);
         System.out.println(userService.findAll());
 
-        System.out.println("---------------사용자 테스트 끝!!!---------------------\n");
+        System.out.println("----------------사용자 테스트 끝!!!--------------------\n");
+
+
+        System.out.println("----------------메시지 테스트 시작!!!------------------");
+
+        System.out.println("----------------메시지 테스트 끝!!!--------------------\n");
+
+
+        System.out.println("----------------채널 테스트 시작!!!-------------------");
+
+        System.out.println("----------------채널 테스트 끝!!!---------------------\n");
+
+
+        System.out.println("----------------의존성 테스트 시작!!!------------------");
+
+        System.out.println("----------------의존성 테스트 끝!!!--------------------\n");
     }
 }
