@@ -8,7 +8,7 @@ import com.sprint.mission.discodeit.service.jcf.*;
 
 public class JavaApplication {
     public static void main(String[] args) {
-        UserService userService = new JCFUserService();q
+        UserService userService = new JCFUserService();
         ChannelService channelService = new JCFChannelService();
         MessageService messageService = new JCFMessageService();
 
