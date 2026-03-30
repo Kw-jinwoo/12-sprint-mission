@@ -59,7 +59,7 @@ public class JCFMessageService implements MessageService {
     public void updateById(UUID id, String content) {
         findById(id).ifPresentOrElse(
                 message -> message.update(content),
-                () -> System.out.println("수정실패 : 입력된 id(" + id + ")에 해당하는 Message가 없습니다")
+                () -> System.out.println("\t수정실패 : 입력된 id(" + id + ")에 해당하는 Message가 없습니다")
         );
     }
 
@@ -67,7 +67,7 @@ public class JCFMessageService implements MessageService {
     public void deleteById(UUID id) {
         findById(id).ifPresentOrElse(
                 data::remove,
-                () -> System.out.println("삭제실패 : 입력된 id(" + id + ")에 해당하는 Message가 없습니다")
+                () -> System.out.println("\t삭제실패 : 입력된 id(" + id + ")에 해당하는 Message가 없습니다")
         );
     }
 }

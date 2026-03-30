@@ -42,7 +42,7 @@ public class JCFUserService implements UserService {
     public void updateById(UUID id, String username, String email, String password, String nickname) {
         findById(id).ifPresentOrElse(
                 (user) -> user.update(username, email, password, nickname),
-                () -> System.out.println("수정실패 : 입력된 id(" + id + ")에 해당하는 User가 없습니다")
+                () -> System.out.println("\t수정실패 : 입력된 id(" + id + ")에 해당하는 User가 없습니다")
         );
     }
 
@@ -50,7 +50,7 @@ public class JCFUserService implements UserService {
     public void deleteById(UUID id) {
         findById(id).ifPresentOrElse(
                 data::remove,
-                () -> System.out.println("삭제실패 : 입력된 id(" + id + ")에 해당하는 User가 없습니다")
+                () -> System.out.println("\t삭제실패 : 입력된 id(" + id + ")에 해당하는 User가 없습니다")
         );
     }
 }

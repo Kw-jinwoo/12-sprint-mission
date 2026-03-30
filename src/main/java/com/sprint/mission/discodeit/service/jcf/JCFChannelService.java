@@ -18,6 +18,7 @@ public class JCFChannelService implements ChannelService {
     @Override
     public UUID create(Channel channel) {
         data.add(channel);
+        addUser(channel.getId(), channel.getOwner());
         return channel.getId();
     }
 
@@ -44,7 +45,7 @@ public class JCFChannelService implements ChannelService {
     public void updateById(UUID id, String channelName, String description, User owner) {
         findById(id).ifPresentOrElse(
                 (channel) -> channel.update(channelName, description, owner),
-                () -> System.out.println("수정실패 : 입력된 id(" + id + ")에 해당하는 Channel이 없습니다")
+                () -> System.out.println("\t수정실패 : 입력된 id(" + id + ")에 해당하는 Channel이 없습니다")
         );
     }
 
@@ -52,15 +53,29 @@ public class JCFChannelService implements ChannelService {
     public void addUser(UUID id, User user) {
         findById(id).ifPresentOrElse(
                 (channel) -> channel.addUser(user),
-                () -> System.out.println("추가실패 : 입력된 id(" + id + ")에 해당하는 Channel이 없습니다")
+                () -> System.out.println("\t추가실패 : 입력된 id(" + id + ")에 해당하는 Channel이 없습니다")
         );
     }
 
     @Override
     public void deleteUser(UUID id, User user) {
         findById(id).ifPresentOrElse(
-                (channel) -> channel.deleteUser(user),
-                () -> System.out.println("삭제실패 : 입력된 id(" + id + ")에 해당하는 Channel이 없습니다")
+                (channel) -> {
+                    if (channel.getOwner() == user) {
+                        channel.deleteUser(user);
+                        List<User> userList = channel.getUserList();
+                        if (!userList.isEmpty()) {
+                            updateById(id, channel.getChannelName(), channel.getDescription(), userList.get(0));
+                            return;
+                        } else {
+                            deleteById(id);
+                            System.out.println("\t삭제성공 : Channel 구성원이 없어 모두 삭제되었습니다");
+                            return;
+                        }
+                    }
+                    channel.deleteUser(user);
+                },
+                () -> System.out.println("\t삭제실패 : 입력된 id(" + id + ")에 해당하는 Channel이 없습니다")
         );
     }
 
@@ -68,7 +83,7 @@ public class JCFChannelService implements ChannelService {
     public void addMessage(UUID id, Message message) {
         findById(id).ifPresentOrElse(
                 (channel) -> channel.addMessage(message),
-                () -> System.out.println("추가실패 : 입력된 id(" + id + ")에 해당하는 Channel이 없습니다")
+                () -> System.out.println("\t추가실패 : 입력된 id(" + id + ")에 해당하는 Channel이 없습니다")
         );
     }
 
@@ -84,7 +99,7 @@ public class JCFChannelService implements ChannelService {
     public void deleteById(UUID id) {
         findById(id).ifPresentOrElse(
                 data::remove,
-                () -> System.out.println("추가실패 : 입력된 id(" + id + ")에 해당하는 Channel이 없습니다")
+                () -> System.out.println("삭제실패 : 입력된 id(" + id + ")에 해당하는 Channel이 없습니다")
         );
     }
 }

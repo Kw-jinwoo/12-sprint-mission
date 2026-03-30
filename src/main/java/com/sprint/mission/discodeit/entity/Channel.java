@@ -44,6 +44,9 @@ public class Channel {
     }
 
     public void addUser(User user) {
+        if (userList.contains(user)) {
+            return;
+        }
         userList.add(user);
     }
 
@@ -56,6 +59,9 @@ public class Channel {
     }
 
     public void addMessage(Message message) {
+        if (!userList.contains(message.getSendUser())) {
+            return;
+        }
         messageList.add(message);
     }
 
