@@ -1,11 +1,11 @@
 package com.sprint.mission.discodeit.entity;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.io.Serializable;
+import java.util.*;
 
-public class Channel {
+public class Channel implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private UUID id;
     private Long createdAt;
     private Long updatedAt;
@@ -54,7 +54,7 @@ public class Channel {
         if (userList.contains(user)) {
             userList.remove(user);
         } else {
-            System.out.println("삭제실패 : 입력된 user(" + user + ")는 해당 Channel에 없습니다");
+            System.out.println("\t삭제실패 : 입력된 user(" + user + ")는 해당 Channel에 없습니다");
         }
     }
 
@@ -69,8 +69,20 @@ public class Channel {
         if (messageList.contains(message)) {
             messageList.remove(message);
         } else {
-            System.out.println("삭제실패 : 입력된 message(" + message + ")는 해당 Channel에 없습니다");
+            System.out.println("\t삭제실패 : 입력된 message(" + message + ")는 해당 Channel에 없습니다");
         }
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (object == null || getClass() != object.getClass()) return false;
+        Channel channel = (Channel) object;
+        return Objects.equals(id, channel.id) && Objects.equals(createdAt, channel.createdAt) && Objects.equals(updatedAt, channel.updatedAt) && Objects.equals(channelName, channel.channelName) && Objects.equals(description, channel.description) && Objects.equals(owner, channel.owner) && Objects.equals(userList, channel.userList) && Objects.equals(messageList, channel.messageList);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, createdAt, updatedAt, channelName, description, owner, userList, messageList);
     }
 
     @Override
