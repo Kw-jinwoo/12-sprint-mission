@@ -4,6 +4,9 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.service.*;
+import com.sprint.mission.discodeit.service.basic.BasicChannelService;
+import com.sprint.mission.discodeit.service.basic.BasicMessageService;
+import com.sprint.mission.discodeit.service.basic.BasicUserService;
 import com.sprint.mission.discodeit.service.file.FileChannelService;
 import com.sprint.mission.discodeit.service.file.FileMessageService;
 import com.sprint.mission.discodeit.service.file.FileUserService;
@@ -19,11 +22,29 @@ import java.util.Comparator;
 import java.util.stream.Stream;
 
 public class JavaApplication {
-    public static void main(String[] args) {
-//        UserService userService = new JCFUserService();
-//        ChannelService channelService = new JCFChannelService();
-//        MessageService messageService = new JCFMessageService();
 
+    static User setupUser(UserService userService) {
+        User user = new User("woody", "woody@codeit.com", "woody1234", "jason");
+        userService.create(user);
+        return user;
+    }
+
+    static Channel setupChannel(ChannelService channelService, User owner) {
+        Channel channel = new Channel("공지", "공지 채널입니다.", owner);
+        channelService.create(channel);
+        return channel;
+    }
+
+    static void messageCreateTest(MessageService messageService, Channel channel, User author) {
+        Message message = new Message("안녕하세요", author);
+        messageService.create(message);
+        System.out.println("메시지 생성: " + message.getId());
+    }
+
+    public static void main(String[] args) {
+
+
+        System.out.println("\n---------------오브젝트파일 초기화 시작------------------");
         Path targetPath = Paths.get("./persistentfiles");
         try {
             if (Files.exists(targetPath)) {
@@ -36,9 +57,23 @@ public class JavaApplication {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        UserService userService = new FileUserService();
-        ChannelService channelService = new FileChannelService();
-        MessageService messageService = new FileMessageService();
+        System.out.println("----------------오브젝트파일 초기화 끝------------------\n\n\n");
+
+//        UserService userService = new JCFUserService();
+//        ChannelService channelService = new JCFChannelService();
+//        MessageService messageService = new JCFMessageService();
+//        UserService userService = new FileUserService();
+//        ChannelService channelService = new FileChannelService();
+//        MessageService messageService = new FileMessageService();
+        UserService userService = new BasicUserService();
+        ChannelService channelService = new BasicChannelService();
+        MessageService messageService = new BasicMessageService();
+
+        // 셋업
+        User user = setupUser(userService);
+        Channel channel = setupChannel(channelService, user);
+        // 테스트
+        messageCreateTest(messageService, channel, user);
 
         System.out.println("----------------사용자 테스트 시작!!!------------------");
         System.out.println();
@@ -223,7 +258,7 @@ public class JavaApplication {
         System.out.println("- ChannelDelete\t\t: MessageService.deleteById() 필요");
         System.out.println("\tChnnelRead : .findById(channel4.getId())");
         System.out.println("\tMessageDelete : .deleteById(message.getId())");
-        channelService.findById(channel4.getId()).ifPresent(channel -> channel.getMessageList().forEach(message -> messageService.deleteById(message.getId())));
+        channelService.findById(channel4.getId()).ifPresent(found -> found.getMessageList().forEach(message -> messageService.deleteById(message.getId())));
         System.out.println("\tChannelDelete : .deleteById(channel4.getId())");
         channelService.deleteById(channel4.getId());
         System.out.println("- MessageDelete\t\t: ChannelService.deleteMessage() 필요");

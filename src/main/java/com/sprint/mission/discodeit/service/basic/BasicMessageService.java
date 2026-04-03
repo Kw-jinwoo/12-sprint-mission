@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.MessageRepository;
+import com.sprint.mission.discodeit.repository.file.FileMessageRepository;
 import com.sprint.mission.discodeit.repository.jcf.JCFMessageRepository;
 import com.sprint.mission.discodeit.service.MessageService;
 
@@ -14,7 +15,7 @@ public class BasicMessageService implements MessageService {
     private final MessageRepository messageRepository;
 
     public BasicMessageService() {
-        messageRepository = new JCFMessageRepository();
+        messageRepository = new FileMessageRepository();
     }
 
     @Override
