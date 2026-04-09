@@ -12,6 +12,9 @@
 .idea/**/dictionaries
 .idea/**/shelf
 
+# Persistentfiles
+/persistentfiles
+
 # AWS User-specific
 .idea/**/aws.xml
 

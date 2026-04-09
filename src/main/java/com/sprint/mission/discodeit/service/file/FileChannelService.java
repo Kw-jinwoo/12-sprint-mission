@@ -9,10 +9,10 @@ import java.io.*;
 import java.util.*;
 
 public class FileChannelService implements ChannelService {
-    private final String BASEPATH = "./persistentfiles/channels";
+    private final String basePath = "./persistentfiles/channels";
 
     public FileChannelService() {
-        File file = new File(BASEPATH);
+        File file = new File(basePath);
         if (!file.exists()) {
             file.mkdirs();
         }
@@ -100,22 +100,8 @@ public class FileChannelService implements ChannelService {
     }
 
 
-
-    private List<String> loadAllFiles() {
-        File file = new File(BASEPATH);
-        if (!file.exists()) {
-            file.mkdirs();
-        }
-        String[] list = file.list();
-        if (list==null) {
-            return new ArrayList<>();
-        } else {
-            return new ArrayList<>(List.of(list));
-        }
-    }
-
     private void saveToFile(Channel channel) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(BASEPATH + "/" + channel.getId().toString()))) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(basePath + "/" + channel.getId().toString()))) {
             oos.writeObject(channel);
         } catch (IOException e) {
             e.printStackTrace();
@@ -124,7 +110,7 @@ public class FileChannelService implements ChannelService {
     }
 
     private Channel loadFromFile(String id) {
-        File file = new File(BASEPATH + "/" + id);
+        File file = new File(basePath + "/" + id);
         if (!file.exists()) {
             return null;
         }
@@ -138,7 +124,7 @@ public class FileChannelService implements ChannelService {
 
     private List<Channel> loadAllFromFile() {
         List<Channel> list = new ArrayList<>();
-        File dir = new File(BASEPATH);
+        File dir = new File(basePath);
         File[] files = dir.listFiles();
         if (files == null) {
             return null;
@@ -155,7 +141,7 @@ public class FileChannelService implements ChannelService {
     }
 
     private void deleteFile(String id) {
-        File file = new File(BASEPATH + "/" + id);
+        File file = new File(basePath + "/" + id);
         if (!file.exists()) {
             System.out.println(file.toPath() + " 파일이 없으므로 삭제할 수 없습니다");
             throw new RuntimeException();

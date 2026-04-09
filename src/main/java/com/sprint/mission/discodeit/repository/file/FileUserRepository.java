@@ -10,10 +10,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class FileUserRepository implements UserRepository {
-    private final String BASEPATH = "./persistentfiles/users";
+    private final String basePath = "./persistentfiles/users";
 
     public FileUserRepository() {
-        File file = new File(BASEPATH);
+        File file = new File(basePath);
         if (!file.exists()) {
             file.mkdirs();
         }
@@ -21,7 +21,7 @@ public class FileUserRepository implements UserRepository {
 
     @Override
     public void save(User user) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(BASEPATH + "/" + user.getId().toString()))) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(basePath + "/" + user.getId().toString()))) {
             oos.writeObject(user);
         } catch (IOException e) {
             e.printStackTrace();
@@ -31,7 +31,7 @@ public class FileUserRepository implements UserRepository {
 
     @Override
     public Optional<User> findById(UUID id) {
-        File file = new File(BASEPATH + "/" + id.toString());
+        File file = new File(basePath + "/" + id.toString());
         if (!file.exists()) {
             return Optional.empty();
         }
@@ -46,7 +46,7 @@ public class FileUserRepository implements UserRepository {
     @Override
     public Optional<List<User>> findAll() {
         List<User> list = new ArrayList<>();
-        File dir = new File(BASEPATH);
+        File dir = new File(basePath);
         File[] files = dir.listFiles();
         if (files == null) {
             return Optional.empty();
@@ -64,7 +64,7 @@ public class FileUserRepository implements UserRepository {
 
     @Override
     public void deleteById(UUID id) {
-        File file = new File(BASEPATH + "/" + id.toString());
+        File file = new File(basePath + "/" + id.toString());
         if (!file.exists()) {
             System.out.println(file.toPath() + " 파일이 없으므로 삭제할 수 없습니다");
             return;

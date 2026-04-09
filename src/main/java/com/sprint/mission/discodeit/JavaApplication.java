@@ -3,6 +3,9 @@ package com.sprint.mission.discodeit;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.repository.file.FileChannelRepository;
+import com.sprint.mission.discodeit.repository.file.FileMessageRepository;
+import com.sprint.mission.discodeit.repository.file.FileUserRepository;
 import com.sprint.mission.discodeit.service.*;
 import com.sprint.mission.discodeit.service.basic.BasicChannelService;
 import com.sprint.mission.discodeit.service.basic.BasicMessageService;
@@ -42,8 +45,6 @@ public class JavaApplication {
     }
 
     public static void main(String[] args) {
-
-
         System.out.println("\n---------------오브젝트파일 초기화 시작------------------");
         Path targetPath = Paths.get("./persistentfiles");
         try {
@@ -65,9 +66,9 @@ public class JavaApplication {
 //        UserService userService = new FileUserService();
 //        ChannelService channelService = new FileChannelService();
 //        MessageService messageService = new FileMessageService();
-        UserService userService = new BasicUserService();
-        ChannelService channelService = new BasicChannelService();
-        MessageService messageService = new BasicMessageService();
+        UserService userService = new BasicUserService(new FileUserRepository());
+        ChannelService channelService = new BasicChannelService(new FileChannelRepository());
+        MessageService messageService = new BasicMessageService(new FileMessageRepository());
 
         // 셋업
         User user = setupUser(userService);

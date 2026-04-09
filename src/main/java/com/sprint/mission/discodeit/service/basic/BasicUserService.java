@@ -13,8 +13,8 @@ import java.util.UUID;
 public class BasicUserService implements UserService {
     private final UserRepository userRepository;
 
-    public BasicUserService() {
-        userRepository = new FileUserRepository();
+    public BasicUserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     @Override

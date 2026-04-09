@@ -10,10 +10,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class FileMessageRepository implements MessageRepository {
-    private final String BASEPATH = "./persistentfiles/messages";
+    private final String basePath = "./persistentfiles/messages";
 
     public FileMessageRepository() {
-        File file = new File(BASEPATH);
+        File file = new File(basePath);
         if (!file.exists()) {
             file.mkdirs();
         }
@@ -21,7 +21,7 @@ public class FileMessageRepository implements MessageRepository {
 
     @Override
     public void save(Message message) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(BASEPATH + "/" + message.getId().toString()))) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(basePath + "/" + message.getId().toString()))) {
             oos.writeObject(message);
         } catch (IOException e) {
             e.printStackTrace();
@@ -31,7 +31,7 @@ public class FileMessageRepository implements MessageRepository {
 
     @Override
     public Optional<Message> findById(UUID id) {
-        File file = new File(BASEPATH + "/" + id.toString());
+        File file = new File(basePath + "/" + id.toString());
         if (!file.exists()) {
             return Optional.empty();
         }
@@ -46,7 +46,7 @@ public class FileMessageRepository implements MessageRepository {
     @Override
     public Optional<List<Message>> findAll() {
         List<Message> list = new ArrayList<>();
-        File dir = new File(BASEPATH);
+        File dir = new File(basePath);
         File[] files = dir.listFiles();
         if (files == null) {
             return Optional.empty();
@@ -64,7 +64,7 @@ public class FileMessageRepository implements MessageRepository {
 
     @Override
     public void deleteById(UUID id) {
-        File file = new File(BASEPATH + "/" + id.toString());
+        File file = new File(basePath + "/" + id.toString());
         if (!file.exists()) {
             System.out.println(file.toPath() + " 파일이 없으므로 삭제할 수 없습니다");
             return;

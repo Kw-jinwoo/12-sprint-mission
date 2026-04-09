@@ -8,10 +8,10 @@ import java.io.*;
 import java.util.*;
 
 public class FileMessageService implements MessageService {
-    private final String BASEPATH = "./persistentfiles/messages";
+    private final String basePath = "./persistentfiles/messages";
 
     public FileMessageService() {
-        File file = new File(BASEPATH);
+        File file = new File(basePath);
         if (!file.exists()) {
             file.mkdirs();
         }
@@ -71,7 +71,7 @@ public class FileMessageService implements MessageService {
 
 
     private void saveToFile(Message message) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(BASEPATH + "/" + message.getId().toString()))) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(basePath + "/" + message.getId().toString()))) {
             oos.writeObject(message);
         } catch (IOException e) {
             e.printStackTrace();
@@ -80,7 +80,7 @@ public class FileMessageService implements MessageService {
     }
 
     private Message loadFromFile(String id) {
-        File file = new File(BASEPATH + "/" + id);
+        File file = new File(basePath + "/" + id);
         if (!file.exists()) {
             return null;
         }
@@ -94,7 +94,7 @@ public class FileMessageService implements MessageService {
 
     private List<Message> loadAllFromFile() {
         List<Message> list = new ArrayList<>();
-        File dir = new File(BASEPATH);
+        File dir = new File(basePath);
         File[] files = dir.listFiles();
         if (files == null) {
             return null;
@@ -111,7 +111,7 @@ public class FileMessageService implements MessageService {
     }
 
     private void deleteFile(String id) {
-        File file = new File(BASEPATH + "/" + id);
+        File file = new File(basePath + "/" + id);
         if (!file.exists()) {
             System.out.println(file.toPath() + " 파일이 없으므로 삭제할 수 없습니다");
             throw new RuntimeException();

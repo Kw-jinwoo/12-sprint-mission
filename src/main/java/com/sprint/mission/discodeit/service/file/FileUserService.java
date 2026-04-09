@@ -7,10 +7,10 @@ import java.io.*;
 import java.util.*;
 
 public class FileUserService implements UserService {
-    private final String BASEPATH = "./persistentfiles/users";
+    private final String basePath = "./persistentfiles/users";
 
     public FileUserService() {
-        File file = new File(BASEPATH);
+        File file = new File(basePath);
         if (!file.exists()) {
             file.mkdirs();
         }
@@ -53,7 +53,7 @@ public class FileUserService implements UserService {
 
 
     private void saveToFile(User user) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(BASEPATH + "/" + user.getId().toString()))) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(basePath + "/" + user.getId().toString()))) {
             oos.writeObject(user);
         } catch (IOException e) {
             e.printStackTrace();
@@ -62,7 +62,7 @@ public class FileUserService implements UserService {
     }
 
     private User loadFromFile(String id) {
-        File file = new File(BASEPATH + "/" + id);
+        File file = new File(basePath + "/" + id);
         if (!file.exists()) {
             return null;
         }
@@ -76,7 +76,7 @@ public class FileUserService implements UserService {
 
     private List<User> loadAllFromFile() {
         List<User> list = new ArrayList<>();
-        File dir = new File(BASEPATH);
+        File dir = new File(basePath);
         File[] files = dir.listFiles();
         if (files == null) {
             return null;
@@ -93,7 +93,7 @@ public class FileUserService implements UserService {
     }
 
     private void deleteFile(String id) {
-        File file = new File(BASEPATH + "/" + id);
+        File file = new File(basePath + "/" + id);
         if (!file.exists()) {
             System.out.println(file.toPath() + " 파일이 없으므로 삭제할 수 없습니다");
             return;

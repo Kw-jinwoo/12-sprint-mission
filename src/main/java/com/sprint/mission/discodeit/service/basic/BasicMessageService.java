@@ -14,8 +14,8 @@ import java.util.UUID;
 public class BasicMessageService implements MessageService {
     private final MessageRepository messageRepository;
 
-    public BasicMessageService() {
-        messageRepository = new FileMessageRepository();
+    public BasicMessageService(MessageRepository messageRepository) {
+        this.messageRepository = messageRepository;
     }
 
     @Override

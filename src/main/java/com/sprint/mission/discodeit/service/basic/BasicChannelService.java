@@ -15,7 +15,9 @@ import java.util.UUID;
 public class BasicChannelService implements ChannelService {
     private final ChannelRepository channelRepository;
 
-    public BasicChannelService() { channelRepository = new FileChannelRepository(); }
+    public BasicChannelService(ChannelRepository channelRepository) {
+        this.channelRepository = channelRepository;
+    }
 
     @Override
     public UUID create(Channel channel) {
