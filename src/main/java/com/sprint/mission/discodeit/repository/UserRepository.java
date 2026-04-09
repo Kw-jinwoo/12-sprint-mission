@@ -7,13 +7,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository {
-    /// CREATE & UPDATE
-    void save(User user);
-
-    /// READ
+    User save(User user);
     Optional<User> findById(UUID id);
-    Optional<List<User>> findAll();
-
-    /// DELETE
+    List<User> findAll();
+    boolean existsById(UUID id);
     void deleteById(UUID id);
 }

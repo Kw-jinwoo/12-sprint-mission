@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.entity;
 
 import java.io.Serializable;
-import java.util.Objects;
+import java.time.Instant;
 import java.util.UUID;
 
 public class User implements Serializable {
@@ -10,74 +10,61 @@ public class User implements Serializable {
     private UUID id;
     private Long createdAt;
     private Long updatedAt;
-
+    //
     private String username;
     private String email;
     private String password;
-    private String nickname;
 
-    public User(String username, String email, String password, String nickname) {
-        id = UUID.randomUUID();
-        createdAt = System.currentTimeMillis();
-        updatedAt = System.currentTimeMillis();
+    public User(String username, String email, String password) {
+        this.id = UUID.randomUUID();
+        this.createdAt = Instant.now().getEpochSecond();
+        //
         this.username = username;
         this.email = email;
         this.password = password;
-        this.nickname = nickname;
     }
 
     public UUID getId() {
         return id;
     }
-    public String getUsername() {
-        return username;
-    }
-    public String getEmail() {
-        return email;
-    }
-    public String getPassword() {
-        return password;
-    }
-    public String getNickname() {
-        return nickname;
-    }
+
     public Long getCreatedAt() {
         return createdAt;
     }
+
     public Long getUpdatedAt() {
         return updatedAt;
     }
 
-    public void update(String username, String email, String password, String nickname){
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.nickname = nickname;
-        updatedAt = System.currentTimeMillis();
+    public String getUsername() {
+        return username;
     }
 
-    @Override
-    public boolean equals(Object object) {
-        if (object == null || getClass() != object.getClass()) return false;
-        User user = (User) object;
-        return Objects.equals(id, user.id) && Objects.equals(createdAt, user.createdAt) && Objects.equals(updatedAt, user.updatedAt) && Objects.equals(username, user.username) && Objects.equals(email, user.email) && Objects.equals(password, user.password) && Objects.equals(nickname, user.nickname);
+    public String getEmail() {
+        return email;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, createdAt, updatedAt, username, email, password, nickname);
+    public String getPassword() {
+        return password;
     }
 
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", username='" + username + '\'' +
-                ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
-                ", nickname='" + nickname + '\'' +
-                ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
-                '}';
+    public void update(String newUsername, String newEmail, String newPassword) {
+        boolean anyValueUpdated = false;
+        if (newUsername != null && !newUsername.equals(this.username)) {
+            this.username = newUsername;
+            anyValueUpdated = true;
+        }
+        if (newEmail != null && !newEmail.equals(this.email)) {
+            this.email = newEmail;
+            anyValueUpdated = true;
+        }
+        if (newPassword != null && !newPassword.equals(this.password)) {
+            this.password = newPassword;
+            anyValueUpdated = true;
+        }
+
+        if (anyValueUpdated) {
+            this.updatedAt = Instant.now().getEpochSecond();
+        }
     }
 }

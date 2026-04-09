@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.entity;
 
 import java.io.Serializable;
-import java.util.Objects;
+import java.time.Instant;
 import java.util.UUID;
 
 public class Message implements Serializable {
@@ -10,54 +10,54 @@ public class Message implements Serializable {
     private UUID id;
     private Long createdAt;
     private Long updatedAt;
-
+    //
     private String content;
-    private boolean isEdited;
-    private final User sendUser;
+    //
+    private UUID channelId;
+    private UUID authorId;
 
-    public Message(String content, User sendUser) {
-        id = UUID.randomUUID();
-        createdAt = System.currentTimeMillis();
-        updatedAt = System.currentTimeMillis();
+    public Message(String content, UUID channelId, UUID authorId) {
+        this.id = UUID.randomUUID();
+        this.createdAt = Instant.now().getEpochSecond();
+        //
         this.content = content;
-        isEdited = false;
-        this.sendUser = sendUser;
+        this.channelId = channelId;
+        this.authorId = authorId;
     }
 
-    public UUID getId() { return id; }
-    public Long getCreatedAt() { return createdAt; }
-    public Long getUpdatedAt() { return updatedAt; }
-    public String getContent() { return content; }
-    public boolean isEdited() { return isEdited; }
-    public User getSendUser() { return sendUser; }
-
-    public void update(String content) {
-        this.content = content;
-        isEdited = true;
-        updatedAt = System.currentTimeMillis();
+    public UUID getId() {
+        return id;
     }
 
-    @Override
-    public boolean equals(Object object) {
-        if (object == null || getClass() != object.getClass()) return false;
-        Message message = (Message) object;
-        return isEdited == message.isEdited && Objects.equals(id, message.id) && Objects.equals(createdAt, message.createdAt) && Objects.equals(updatedAt, message.updatedAt) && Objects.equals(content, message.content) && Objects.equals(sendUser, message.sendUser);
+    public Long getCreatedAt() {
+        return createdAt;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, createdAt, updatedAt, content, isEdited, sendUser);
+    public Long getUpdatedAt() {
+        return updatedAt;
     }
 
-    @Override
-    public String toString() {
-        return "Message{" +
-                "id=" + id +
-                ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
-                ", content='" + content + '\'' +
-                ", isEdited=" + isEdited +
-                ", sendUser=" + sendUser +
-                '}';
+    public String getContent() {
+        return content;
+    }
+
+    public UUID getChannelId() {
+        return channelId;
+    }
+
+    public UUID getAuthorId() {
+        return authorId;
+    }
+
+    public void update(String newContent) {
+        boolean anyValueUpdated = false;
+        if (newContent != null && !newContent.equals(this.content)) {
+            this.content = newContent;
+            anyValueUpdated = true;
+        }
+
+        if (anyValueUpdated) {
+            this.updatedAt = Instant.now().getEpochSecond();
+        }
     }
 }

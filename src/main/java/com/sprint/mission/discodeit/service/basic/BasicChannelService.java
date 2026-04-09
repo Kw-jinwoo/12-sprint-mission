@@ -1,15 +1,12 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.entity.Channel;
-import com.sprint.mission.discodeit.entity.Message;
-import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
-import com.sprint.mission.discodeit.repository.file.FileChannelRepository;
-import com.sprint.mission.discodeit.repository.jcf.JCFChannelRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 public class BasicChannelService implements ChannelService {
@@ -20,78 +17,35 @@ public class BasicChannelService implements ChannelService {
     }
 
     @Override
-    public UUID create(Channel channel) {
-        channelRepository.save(channel);
-        return channel.getId();
+    public Channel create(ChannelType type, String name, String description) {
+        Channel channel = new Channel(type, name, description);
+        return channelRepository.save(channel);
     }
 
     @Override
-    public Optional<Channel> findById(UUID id) {
-        return channelRepository.findById(id);
+    public Channel find(UUID channelId) {
+        return channelRepository.findById(channelId)
+                        .orElseThrow(() -> new NoSuchElementException("Channel with id " + channelId + " not found"));
     }
 
     @Override
-    public Optional<List<Channel>> findAll() {
+    public List<Channel> findAll() {
         return channelRepository.findAll();
     }
 
     @Override
-    public void updateById(UUID id, String channelName, String description, User owner) {
-        channelRepository.findById(id).ifPresentOrElse(
-                channel -> {
-                    channel.update(channelName, description, owner);
-                    channelRepository.save(channel);
-                },
-                () -> System.out.println("\t수정실패 : 입력된 id(" + id + ")에 해당하는 Channel이 없습니다")
-        );
+    public Channel update(UUID channelId, String newName, String newDescription) {
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new NoSuchElementException("Channel with id " + channelId + " not found"));
+        channel.update(newName, newDescription);
+        return channelRepository.save(channel);
     }
 
     @Override
-    public void addUser(UUID id, User user) {
-        channelRepository.findById(id).ifPresentOrElse(
-                channel -> {
-                    channel.addUser(user);
-                    channelRepository.save(channel);
-                },
-                () -> System.out.println("\t수정실패 : 입력된 id(" + id + ")에 해당하는 Channel이 없습니다")
-        );
-    }
-
-    @Override
-    public void deleteUser(UUID id, User user) {
-        channelRepository.findById(id).ifPresentOrElse(
-                channel -> {
-                    channel.deleteUser(user);
-                    channelRepository.save(channel);
-                },
-                () -> System.out.println("\t수정실패 : 입력된 id(" + id + ")에 해당하는 Channel이 없습니다")
-        );
-    }
-
-    @Override
-    public void addMessage(UUID id, Message message) {
-        channelRepository.findById(id).ifPresentOrElse(
-                channel -> {
-                    channel.addMessage(message);
-                    channelRepository.save(channel);
-                },
-                () -> System.out.println("\t수정실패 : 입력된 id(" + id + ")에 해당하는 Channel이 없습니다")
-        );
-    }
-
-    @Override
-    public void deleteMessage(UUID id, Message message) {
-        channelRepository.findById(id).ifPresentOrElse(
-                channel -> {
-                    channel.deleteMessage(message);
-                    channelRepository.save(channel);
-                },
-                () -> System.out.println("\t수정실패 : 입력된 id(" + id + ")에 해당하는 Channel이 없습니다")
-        );
-    }
-
-    @Override
-    public void deleteById(UUID id) {
-        channelRepository.deleteById(id);
+    public void delete(UUID channelId) {
+        if (!channelRepository.existsById(channelId)) {
+            throw new NoSuchElementException("Channel with id " + channelId + " not found");
+        }
+        channelRepository.deleteById(channelId);
     }
 }

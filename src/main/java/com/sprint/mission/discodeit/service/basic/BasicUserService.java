@@ -2,12 +2,10 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.repository.file.FileUserRepository;
-import com.sprint.mission.discodeit.repository.jcf.JCFUserRepository;
 import com.sprint.mission.discodeit.service.UserService;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 public class BasicUserService implements UserService {
@@ -18,34 +16,35 @@ public class BasicUserService implements UserService {
     }
 
     @Override
-    public UUID create(User user) {
-        userRepository.save(user);
-        return user.getId();
+    public User create(String username, String email, String password) {
+        User user = new User(username, email, password);
+        return userRepository.save(user);
     }
 
     @Override
-    public Optional<User> findById(UUID id) {
-        return userRepository.findById(id);
+    public User find(UUID userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NoSuchElementException("User with id " + userId + " not found"));
     }
 
     @Override
-    public Optional<List<User>> findAll() {
+    public List<User> findAll() {
         return userRepository.findAll();
     }
 
     @Override
-    public void updateById(UUID id, String username, String email, String password, String nickname) {
-        userRepository.findById(id).ifPresentOrElse(
-                user -> {
-                    user.update(username, email, password, nickname);
-                    userRepository.save(user);
-                },
-                () -> System.out.println("\t수정실패 : 입력된 id(" + id + ")에 해당하는 User가 없습니다")
-        );
+    public User update(UUID userId, String newUsername, String newEmail, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NoSuchElementException("User with id " + userId + " not found"));
+        user.update(newUsername, newEmail, newPassword);
+        return userRepository.save(user);
     }
 
     @Override
-    public void deleteById(UUID id) {
-        userRepository.deleteById(id);
+    public void delete(UUID userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new NoSuchElementException("User with id " + userId + " not found");
+        }
+        userRepository.deleteById(userId);
     }
 }
