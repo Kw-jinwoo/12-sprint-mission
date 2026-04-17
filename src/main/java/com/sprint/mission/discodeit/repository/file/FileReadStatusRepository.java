@@ -1,7 +1,8 @@
 package com.sprint.mission.discodeit.repository.file;
 
-import com.sprint.mission.discodeit.entity.Message;
-import com.sprint.mission.discodeit.repository.MessageRepository;
+import com.sprint.mission.discodeit.entity.ReadStatus;
+import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import org.springframework.stereotype.Repository;
 
 import java.io.*;
@@ -12,12 +13,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class FileMessageRepository implements MessageRepository {
+public class FileReadStatusRepository implements ReadStatusRepository {
     private final Path DIRECTORY;
     private final String EXTENSION = ".ser";
 
-    public FileMessageRepository(String path) {
-        this.DIRECTORY = Paths.get(path + "/Message");
+    public FileReadStatusRepository(String path) {
+        this.DIRECTORY = Paths.get(path + "/ReadStatus");
         if (Files.notExists(DIRECTORY)) {
             try {
                 Files.createDirectories(DIRECTORY);
@@ -32,38 +33,50 @@ public class FileMessageRepository implements MessageRepository {
     }
 
     @Override
-    public Message save(Message message) {
-        Path path = resolvePath(message.getId());
+    public ReadStatus save(ReadStatus readStatus) {
+        Path path = resolvePath(readStatus.getId());
         try (
                 FileOutputStream fos = new FileOutputStream(path.toFile());
                 ObjectOutputStream oos = new ObjectOutputStream(fos)
         ) {
-            oos.writeObject(message);
+            oos.writeObject(readStatus);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return message;
+        return readStatus;
     }
 
     @Override
-    public Optional<Message> findById(UUID id) {
-        Message messageNullable = null;
+    public Optional<ReadStatus> findById(UUID id) {
+        ReadStatus readStatusNullable = null;
         Path path = resolvePath(id);
         if (Files.exists(path)) {
             try (
                     FileInputStream fis = new FileInputStream(path.toFile());
                     ObjectInputStream ois = new ObjectInputStream(fis)
             ) {
-                messageNullable = (Message) ois.readObject();
+                readStatusNullable = (ReadStatus) ois.readObject();
             } catch (IOException | ClassNotFoundException e) {
                 throw new RuntimeException(e);
             }
         }
-        return Optional.ofNullable(messageNullable);
+        return Optional.ofNullable(readStatusNullable);
     }
 
     @Override
-    public List<Message> findAll() {
+    public List<ReadStatus> findByChannelId(UUID id) {
+        List<ReadStatus> readStatuses = findAll();
+        return readStatuses.stream().filter(elm -> elm.getChannelId().equals(id)).toList();
+    }
+
+    @Override
+    public List<ReadStatus> findByUserId(UUID id) {
+        List<ReadStatus> readStatuses = findAll();
+        return readStatuses.stream().filter(elm -> elm.getUserId().equals(id)).toList();
+    }
+
+    @Override
+    public List<ReadStatus> findAll() {
         try {
             return Files.list(DIRECTORY)
                     .filter(path -> path.toString().endsWith(EXTENSION))
@@ -72,7 +85,7 @@ public class FileMessageRepository implements MessageRepository {
                                 FileInputStream fis = new FileInputStream(path.toFile());
                                 ObjectInputStream ois = new ObjectInputStream(fis)
                         ) {
-                            return (Message) ois.readObject();
+                            return (ReadStatus) ois.readObject();
                         } catch (IOException | ClassNotFoundException e) {
                             throw new RuntimeException(e);
                         }
@@ -81,12 +94,6 @@ public class FileMessageRepository implements MessageRepository {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public List<Message> findByChannelId(UUID channelId) {
-        List<Message> messages = findAll();
-        return messages.stream().filter(msg -> msg.getChannelId().equals(channelId)).toList();
     }
 
     @Override

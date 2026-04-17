@@ -1,7 +1,8 @@
 package com.sprint.mission.discodeit.repository.file;
 
-import com.sprint.mission.discodeit.entity.Message;
-import com.sprint.mission.discodeit.repository.MessageRepository;
+import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import org.springframework.stereotype.Repository;
 
 import java.io.*;
@@ -12,12 +13,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class FileMessageRepository implements MessageRepository {
+public class FileBinaryContentRepository implements BinaryContentRepository {
     private final Path DIRECTORY;
     private final String EXTENSION = ".ser";
 
-    public FileMessageRepository(String path) {
-        this.DIRECTORY = Paths.get(path + "/Message");
+    public FileBinaryContentRepository(String path) {
+        this.DIRECTORY = Paths.get(path + "/BinaryContent");
         if (Files.notExists(DIRECTORY)) {
             try {
                 Files.createDirectories(DIRECTORY);
@@ -27,43 +28,41 @@ public class FileMessageRepository implements MessageRepository {
         }
     }
 
-    private Path resolvePath(UUID id) {
-        return DIRECTORY.resolve(id + EXTENSION);
-    }
+    private Path resolvePath(UUID id) { return DIRECTORY.resolve(id + EXTENSION); }
 
     @Override
-    public Message save(Message message) {
-        Path path = resolvePath(message.getId());
+    public BinaryContent save(BinaryContent binaryContent) {
+        Path path = resolvePath(binaryContent.getId());
         try (
                 FileOutputStream fos = new FileOutputStream(path.toFile());
-                ObjectOutputStream oos = new ObjectOutputStream(fos)
+                ObjectOutputStream oos = new ObjectOutputStream(fos);
         ) {
-            oos.writeObject(message);
+            oos.writeObject(binaryContent);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return message;
+        return binaryContent;
     }
 
     @Override
-    public Optional<Message> findById(UUID id) {
-        Message messageNullable = null;
+    public Optional<BinaryContent> findById(UUID id) {
+        BinaryContent binaryContentNullable = null;
         Path path = resolvePath(id);
         if (Files.exists(path)) {
             try (
                     FileInputStream fis = new FileInputStream(path.toFile());
                     ObjectInputStream ois = new ObjectInputStream(fis)
             ) {
-                messageNullable = (Message) ois.readObject();
+                binaryContentNullable = (BinaryContent) ois.readObject();
             } catch (IOException | ClassNotFoundException e) {
                 throw new RuntimeException(e);
             }
         }
-        return Optional.ofNullable(messageNullable);
+        return Optional.ofNullable(binaryContentNullable);
     }
 
     @Override
-    public List<Message> findAll() {
+    public List<BinaryContent> findAll() {
         try {
             return Files.list(DIRECTORY)
                     .filter(path -> path.toString().endsWith(EXTENSION))
@@ -72,7 +71,7 @@ public class FileMessageRepository implements MessageRepository {
                                 FileInputStream fis = new FileInputStream(path.toFile());
                                 ObjectInputStream ois = new ObjectInputStream(fis)
                         ) {
-                            return (Message) ois.readObject();
+                            return (BinaryContent) ois.readObject();
                         } catch (IOException | ClassNotFoundException e) {
                             throw new RuntimeException(e);
                         }
@@ -81,12 +80,6 @@ public class FileMessageRepository implements MessageRepository {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public List<Message> findByChannelId(UUID channelId) {
-        List<Message> messages = findAll();
-        return messages.stream().filter(msg -> msg.getChannelId().equals(channelId)).toList();
     }
 
     @Override

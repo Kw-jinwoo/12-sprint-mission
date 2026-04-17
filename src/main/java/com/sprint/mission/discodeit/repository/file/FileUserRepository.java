@@ -12,13 +12,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository
 public class FileUserRepository implements UserRepository {
     private final Path DIRECTORY;
     private final String EXTENSION = ".ser";
 
-    public FileUserRepository() {
-        this.DIRECTORY = Paths.get(System.getProperty("user.dir"), "file-data-map", User.class.getSimpleName());
+    public FileUserRepository(String path) {
+        this.DIRECTORY = Paths.get(path + "/User");
         if (Files.notExists(DIRECTORY)) {
             try {
                 Files.createDirectories(DIRECTORY);
@@ -64,6 +63,17 @@ public class FileUserRepository implements UserRepository {
     }
 
     @Override
+    public Optional<User> findByUsername(String username) {
+        List<User> users = findAll();
+        for (User user : users) {
+            if (user.getUsername().equals(username)) {
+                return Optional.of(user);
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Override
     public List<User> findAll() {
         try {
             return Files.list(DIRECTORY)
@@ -88,6 +98,28 @@ public class FileUserRepository implements UserRepository {
     public boolean existsById(UUID id) {
         Path path = resolvePath(id);
         return Files.exists(path);
+    }
+
+    @Override
+    public boolean existByEmail(String email) {
+        List<User> users = findAll();
+        for (User user : users) {
+            if (user.getEmail().equals(email)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean existByUsername(String username) {
+        List<User> users = findAll();
+        for (User user : users) {
+            if (user.getUsername().equals(username)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

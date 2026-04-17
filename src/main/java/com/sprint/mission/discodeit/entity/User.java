@@ -11,20 +11,22 @@ public class User implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private UUID id;
-    private Long createdAt;
-    private Long updatedAt;
+    private UUID profileId;
+    private Instant createdAt;
+    private Instant updatedAt;
     //
     private String username;
     private String email;
     private String password;
 
-    public User(String username, String email, String password) {
+    public User(String username, String email, String password, UUID profileId) {
         this.id = UUID.randomUUID();
-        this.createdAt = Instant.now().getEpochSecond();
-        //
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
         this.username = username;
         this.email = email;
         this.password = password;
+        this.profileId = profileId;
     }
 
     public void update(String newUsername, String newEmail, String newPassword) {
@@ -43,7 +45,7 @@ public class User implements Serializable {
         }
 
         if (anyValueUpdated) {
-            this.updatedAt = Instant.now().getEpochSecond();
+            this.updatedAt = Instant.now();
         }
     }
 }

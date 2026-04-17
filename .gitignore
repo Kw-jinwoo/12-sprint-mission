@@ -14,6 +14,7 @@
 
 # Persistentfiles
 /persistentfiles
+/file-data-map/*
 
 # AWS User-specific
 .idea/**/aws.xml

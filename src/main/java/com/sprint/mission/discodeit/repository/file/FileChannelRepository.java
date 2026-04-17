@@ -12,13 +12,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository
 public class FileChannelRepository implements ChannelRepository {
     private final Path DIRECTORY;
     private final String EXTENSION = ".ser";
 
-    public FileChannelRepository() {
-        this.DIRECTORY = Paths.get(System.getProperty("user.dir"), "file-data-map", Channel.class.getSimpleName());
+    public FileChannelRepository(String path) {
+        this.DIRECTORY = Paths.get(path + "/Channel");
         if (Files.notExists(DIRECTORY)) {
             try {
                 Files.createDirectories(DIRECTORY);
