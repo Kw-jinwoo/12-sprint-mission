@@ -12,7 +12,6 @@ import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.service.basic.BasicChannelService;
 import com.sprint.mission.discodeit.service.basic.BasicMessageService;
 import com.sprint.mission.discodeit.service.basic.BasicUserService;
-import org.springframework.beans.factory.annotation.Value;
 
 public class JavaApplication {
 
@@ -21,7 +20,7 @@ public class JavaApplication {
     }
 
     static Channel setupChannel(ChannelService channelService) {
-        return channelService.createPublic(ChannelCreateDTO.builder().name("공지").description("공지 채널입니다.").users(null).build());
+        return channelService.createPublic(ChannelCreateDTO.builder().name("공지").description("공지 채널입니다.").userIds(null).build());
     }
 
     static void messageCreateTest(MessageService messageService, Channel channel, User author) {

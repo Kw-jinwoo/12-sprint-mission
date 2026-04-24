@@ -30,8 +30,8 @@ public class BasicChannelService implements ChannelService {
     @Override
     public Channel createPrivate(ChannelCreateDTO channelCreateDTO) {
         Channel channel = new Channel(ChannelType.PRIVATE, null, null);
-        for (User user : channelCreateDTO.getUsers()) {
-            readStatusRepository.save(new ReadStatus(user.getId(), channel.getId()));
+        for (UUID userId : channelCreateDTO.getUserIds()) {
+            readStatusRepository.save(new ReadStatus(userId, channel.getId()));
         }
         return channelRepository.save(channel);
     }
@@ -87,6 +87,9 @@ public class BasicChannelService implements ChannelService {
     public Channel update(ChannelUpdateDTO channelUpdateDTO) {
         Channel channel = channelRepository.findById(channelUpdateDTO.getId())
                 .orElseThrow(() -> new NoSuchElementException("Channel with id " + channelUpdateDTO.getId() + " not found"));
+        if (channel.getType() == ChannelType.PRIVATE) {
+            throw new IllegalArgumentException("Channel with id " + channelUpdateDTO.getId() + " is PRIVATE, forbidden for update");
+        }
         channel.update(channelUpdateDTO.getName(), channelUpdateDTO.getDescription());
         return channelRepository.save(channel);
     }

@@ -75,7 +75,10 @@ public class BasicUserService implements UserService {
         user.update(userUpdateDTO.getUsername(), userUpdateDTO.getEmail(), userUpdateDTO.getPassword());
         if (userUpdateDTO.getProfileImageType() != null) {
             binaryContentRepository.findById(user.getProfileId()).ifPresentOrElse(
-                    binaryContent -> binaryContent.update(userUpdateDTO.getProfileImageType(), userUpdateDTO.getProfileImage()),
+                    binaryContent -> {
+                        binaryContent.update(userUpdateDTO.getProfileImageType(), userUpdateDTO.getProfileImage());
+                        binaryContentRepository.save(binaryContent);
+                    },
                     () -> binaryContentRepository.save(new BinaryContent(userUpdateDTO.getProfileImageType(), userUpdateDTO.getProfileImage()))
             );
         }

@@ -28,10 +28,12 @@ public class ReadStatusService {
             throw new NoSuchElementException("User not found with id " + readStatusCreateDTO.getUserId());
         }
         if (readStatusRepository.findByUserId(readStatusCreateDTO.getUserId())
-                .equals(readStatusRepository.findByChannelId(readStatusCreateDTO.getChannelId()))) {
+                .stream()
+                .anyMatch(elm -> readStatusRepository.findByChannelId(readStatusCreateDTO.getChannelId()).contains(elm)
+                )) {
             throw new IllegalArgumentException("ReadStatus with Channel " + readStatusCreateDTO.getChannelId() + " and User " + readStatusCreateDTO.getUserId() + " already exists");
         }
-        return new ReadStatus(readStatusCreateDTO.getUserId(), readStatusCreateDTO.getChannelId());
+        return readStatusRepository.save(new ReadStatus(readStatusCreateDTO.getUserId(), readStatusCreateDTO.getChannelId()));
     }
 
     public ReadStatus find(UUID id) {

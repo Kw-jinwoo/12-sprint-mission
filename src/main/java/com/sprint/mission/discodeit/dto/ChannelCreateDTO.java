@@ -5,11 +5,12 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Builder
 public class ChannelCreateDTO {
     private String name;
     private String description;
-    private List<User> users;
+    private List<UUID> userIds;
 }
