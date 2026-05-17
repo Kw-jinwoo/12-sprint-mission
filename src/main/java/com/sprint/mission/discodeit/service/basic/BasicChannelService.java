@@ -8,15 +8,18 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.ReadStatus;
+import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
+import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.*;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
@@ -26,29 +29,36 @@ public class BasicChannelService implements ChannelService {
   //
   private final ReadStatusRepository readStatusRepository;
   private final MessageRepository messageRepository;
+  private final UserRepository userRepository;
 
   @Override
+  @Transactional
   public Channel create(PublicChannelCreateRequest request) {
     String name = request.name();
     String description = request.description();
-    Channel channel = new Channel(ChannelType.PUBLIC, name, description);
+    Channel channel = Channel.builder().name(name).description(description).type(ChannelType.PUBLIC).build();
 
     return channelRepository.save(channel);
   }
 
   @Override
+  @Transactional
   public Channel create(PrivateChannelCreateRequest request) {
-    Channel channel = new Channel(ChannelType.PRIVATE, null, null);
+    Channel channel = Channel.builder().type(ChannelType.PRIVATE).build();
     Channel createdChannel = channelRepository.save(channel);
 
     request.participantIds().stream()
-        .map(userId -> new ReadStatus(userId, createdChannel.getId(), channel.getCreatedAt()))
-        .forEach(readStatusRepository::save);
+            .map(userId -> {
+              User participant = userRepository.findById(userId).orElseThrow(() -> new NoSuchElementException("User with id " + userId + "not found"));
+              return ReadStatus.builder().user(participant).channel(createdChannel).lastReadAt(channel.getCreatedAt()).build();
+            })
+            .forEach(readStatusRepository::save);
 
     return createdChannel;
   }
 
   @Override
+  @Transactional(readOnly = true)
   public ChannelDto find(UUID channelId) {
     return channelRepository.findById(channelId)
         .map(this::toDto)
@@ -57,9 +67,10 @@ public class BasicChannelService implements ChannelService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<ChannelDto> findAllByUserId(UUID userId) {
     List<UUID> mySubscribedChannelIds = readStatusRepository.findAllByUserId(userId).stream()
-        .map(ReadStatus::getChannelId)
+        .map(readStatus -> readStatus.getChannel().getId())
         .toList();
 
     return channelRepository.findAll().stream()
@@ -72,6 +83,7 @@ public class BasicChannelService implements ChannelService {
   }
 
   @Override
+  @Transactional
   public Channel update(UUID channelId, PublicChannelUpdateRequest request) {
     String newName = request.newName();
     String newDescription = request.newDescription();
@@ -81,11 +93,13 @@ public class BasicChannelService implements ChannelService {
     if (channel.getType().equals(ChannelType.PRIVATE)) {
       throw new IllegalArgumentException("Private channel cannot be updated");
     }
-    channel.update(newName, newDescription);
+    channel.setName(newName);
+    channel.setDescription(newDescription);
     return channelRepository.save(channel);
   }
 
   @Override
+  @Transactional
   public void delete(UUID channelId) {
     Channel channel = channelRepository.findById(channelId)
         .orElseThrow(
@@ -110,7 +124,7 @@ public class BasicChannelService implements ChannelService {
     if (channel.getType().equals(ChannelType.PRIVATE)) {
       readStatusRepository.findAllByChannelId(channel.getId())
           .stream()
-          .map(ReadStatus::getUserId)
+          .map(readStatus -> readStatus.getChannel().getId())
           .forEach(participantIds::add);
     }
 
