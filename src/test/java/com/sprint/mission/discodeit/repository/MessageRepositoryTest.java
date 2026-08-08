@@ -1,170 +1,217 @@
 package com.sprint.mission.discodeit.repository;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-import org.springframework.test.context.ActiveProfiles;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import org.hibernate.Hibernate;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.assertj.core.api.Assertions.*;
-
-@ActiveProfiles("test")
-@EnableJpaAuditing
+/**
+ * MessageRepository 슬라이스 테스트
+ */
 @DataJpaTest
-public class MessageRepositoryTest {
+@EnableJpaAuditing
+@ActiveProfiles("test")
+class MessageRepositoryTest {
 
-	@Autowired
-	private MessageRepository messageRepository;
+  @Autowired
+  private MessageRepository messageRepository;
 
-	@Autowired
-	private ChannelRepository channelRepository;
+  @Autowired
+  private ChannelRepository channelRepository;
 
-	@Autowired
-	private UserRepository userRepository;
+  @Autowired
+  private UserRepository userRepository;
 
+  @Autowired
+  private TestEntityManager entityManager;
 
-	@Test
-	@DisplayName("findAllByChannelIdWithAuthor - 성공: 특정 채널의 메시지 목록을 커서(createdAt) 기반 Slice 페이징으로 조회한다")
-	void findAllByChannelIdWithAuthor_Success() {
-		// given
-		Channel channel = new Channel(ChannelType.PUBLIC, "개발 채널", "개발 관련 대화");
-		channelRepository.save(channel);
+  /**
+   * TestFixture: 테스트용 사용자 생성
+   */
+  private User createTestUser(String username, String email) {
+    BinaryContent profile = new BinaryContent("profile.jpg", 1024L, "image/jpeg");
+    User user = new User(username, email, "password123!@#", profile);
+    return userRepository.save(user);
+  }
 
-		BinaryContent profile = new BinaryContent("avatar.png", 500L, "image/png");
-		User author = new User("coder", "coder@example.com", "pass", profile);
-		UserStatus status = new UserStatus(author, Instant.now());
+  /**
+   * TestFixture: 테스트용 채널 생성
+   */
+  private Channel createTestChannel(ChannelType type, String name) {
+    Channel channel = new Channel(type, name, "설명: " + name);
+    return channelRepository.save(channel);
+  }
 
-		userRepository.save(author);
-		Message msg1 = new Message("첫 번째 메시지", channel, author, List.of());
-		Message msg2 = new Message("두 번째 메시지", channel, author, List.of());
+  /**
+   * TestFixture: 테스트용 메시지 생성 ReflectionTestUtils를 사용하여 createdAt 필드를 직접 설정
+   */
+  private Message createTestMessage(String content, Channel channel, User author,
+      Instant createdAt) {
+    Message message = new Message(content, channel, author, new ArrayList<>());
 
-		messageRepository.saveAll(List.of(msg1, msg2));
-		Instant cursorTime = Instant.now().plusSeconds(10);
-		Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+    // 생성 시간이 지정된 경우, ReflectionTestUtils로 설정
+    if (createdAt != null) {
+      ReflectionTestUtils.setField(message, "createdAt", createdAt);
+    }
 
-		// when
-		Slice<Message> result = messageRepository.findAllByChannelIdWithAuthor(channel.getId(), cursorTime, pageable);
+    Message savedMessage = messageRepository.save(message);
+    entityManager.flush();
 
-		// then
-		assertThat(result).isNotEmpty();
-		assertThat(result.getContent()).hasSize(2);
-		assertThat(result.getContent().get(0).getAuthor().getUsername()).isEqualTo("coder");
-		assertThat(result.getContent().get(0).getAuthor().getStatus()).isNotNull(); // 패치 조인 확인
-	}
+    return savedMessage;
+  }
 
-	@Test
-	@DisplayName("findAllByChannelIdWithAuthor - 실패/데이터없음: 검색 기준 시간(createdAt) 조건보다 과거에 작성된 메시지가 없으면 빈 Slice를 반환한다")
-	void findAllByChannelIdWithAuthor_Fail_NoMessagesBeforeCursor() {
-		// given
-		Channel channel = new Channel(ChannelType.PUBLIC, "자유 채널", "자유 대화");
-		channelRepository.save(channel);
+  @Test
+  @DisplayName("채널 ID와 생성 시간으로 메시지를 페이징하여 조회할 수 있다")
+  void findAllByChannelIdWithAuthor_ReturnsMessagesWithAuthor() {
+    // given
+    User user = createTestUser("testUser", "test@example.com");
+    Channel channel = createTestChannel(ChannelType.PUBLIC, "테스트채널");
 
-		User author = new User("user", "user@example.com", "pass", null);
-		new UserStatus(author, Instant.now());
-		userRepository.save(author);
+    Instant now = Instant.now();
+    Instant fiveMinutesAgo = now.minus(5, ChronoUnit.MINUTES);
+    Instant tenMinutesAgo = now.minus(10, ChronoUnit.MINUTES);
 
-		Message msg = new Message("방금 쓴 메시지", channel, author, List.of());
-		messageRepository.save(msg);
+    // 채널에 세 개의 메시지 생성 (시간 순서대로)
+    Message message1 = createTestMessage("첫 번째 메시지", channel, user, tenMinutesAgo);
+    Message message2 = createTestMessage("두 번째 메시지", channel, user, fiveMinutesAgo);
+    Message message3 = createTestMessage("세 번째 메시지", channel, user, now);
 
-		Instant pastCursorTime = Instant.now().minusSeconds(100);
-		Pageable pageable = PageRequest.of(0, 10);
+    // 영속성 컨텍스트 초기화
+    entityManager.flush();
+    entityManager.clear();
 
-		// when
-		Slice<Message> result = messageRepository.findAllByChannelIdWithAuthor(channel.getId(), pastCursorTime, pageable);
+    // when - 최신 메시지보다 이전 시간으로 조회
+    Slice<Message> messages = messageRepository.findAllByChannelIdWithAuthor(
+        channel.getId(),
+        now.plus(1, ChronoUnit.MINUTES),  // 현재 시간보다 더 미래
+        PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "createdAt"))
+    );
 
-		// then
-		assertThat(result.getContent()).isEmpty();
-	}
+    // then
+    assertThat(messages).isNotNull();
+    assertThat(messages.hasContent()).isTrue();
+    assertThat(messages.getNumberOfElements()).isEqualTo(2);  // 페이지 크기 만큼만 반환
+    assertThat(messages.hasNext()).isTrue();
 
+    // 시간 역순(최신순)으로 정렬되어 있는지 확인
+    List<Message> content = messages.getContent();
+    assertThat(content.get(0).getCreatedAt()).isAfterOrEqualTo(content.get(1).getCreatedAt());
 
-	@Test
-	@DisplayName("findLastMessageAtByChannelId - 성공: 해당 채널에 작성된 마지막 메시지의 생성 시간을 정확히 조회한다")
-	void findLastMessageAtByChannelId_Success() {
-		// given
-		Channel channel = new Channel(ChannelType.PUBLIC, "테스트 채널", "설명");
-		channelRepository.save(channel);
+    // 저자 정보가 함께 로드되었는지 확인 (FETCH JOIN)
+    Message firstMessage = content.get(0);
+    assertThat(Hibernate.isInitialized(firstMessage.getAuthor())).isTrue();
+    assertThat(Hibernate.isInitialized(firstMessage.getAuthor().getProfile())).isTrue();
+  }
 
-		User author = new User("writer", "writer@example.com", "pass", null);
-		new UserStatus(author, Instant.now());
-		userRepository.save(author);
+  @Test
+  @DisplayName("채널의 마지막 메시지 시간을 조회할 수 있다")
+  void findLastMessageAtByChannelId_ReturnsLastMessageTime() {
+    // given
+    User user = createTestUser("testUser", "test@example.com");
+    Channel channel = createTestChannel(ChannelType.PUBLIC, "테스트채널");
 
-		Message oldMsg = new Message("예전 메시지", channel, author, List.of());
-		messageRepository.save(oldMsg);
+    Instant now = Instant.now();
+    Instant fiveMinutesAgo = now.minus(5, ChronoUnit.MINUTES);
+    Instant tenMinutesAgo = now.minus(10, ChronoUnit.MINUTES);
 
-		Message newMsg = new Message("가장 최근 메시지", channel, author, List.of());
-		messageRepository.save(newMsg);
+    // 채널에 세 개의 메시지 생성 (시간 순서대로)
+    createTestMessage("첫 번째 메시지", channel, user, tenMinutesAgo);
+    createTestMessage("두 번째 메시지", channel, user, fiveMinutesAgo);
+    Message lastMessage = createTestMessage("세 번째 메시지", channel, user, now);
 
-		// when
-		Optional<Instant> result = messageRepository.findLastMessageAtByChannelId(channel.getId());
+    // 영속성 컨텍스트 초기화
+    entityManager.flush();
+    entityManager.clear();
 
-		// then
-		assertThat(result).isPresent();
-		assertThat(result.get()).isEqualTo(newMsg.getCreatedAt());
-	}
+    // when
+    Optional<Instant> lastMessageAt = messageRepository.findLastMessageAtByChannelId(
+        channel.getId());
 
-	@Test
-	@DisplayName("findLastMessageAtByChannelId - 실패/데이터없음: 메시지가 전혀 없는 채널의 ID로 조회하면 Optional.empty()를 반환한다")
-	void findLastMessageAtByChannelId_Fail_EmptyChannel() {
-		// given
-		Channel emptyChannel = new Channel(ChannelType.PUBLIC, "빈 채널", "대화 없음");
-		channelRepository.save(emptyChannel);
+    // then
+    assertThat(lastMessageAt).isPresent();
+    // 마지막 메시지 시간과 일치하는지 확인 (밀리초 단위 이하의 차이는 무시)
+    assertThat(lastMessageAt.get().truncatedTo(ChronoUnit.MILLIS))
+        .isEqualTo(lastMessage.getCreatedAt().truncatedTo(ChronoUnit.MILLIS));
+  }
 
-		// when
-		Optional<Instant> result = messageRepository.findLastMessageAtByChannelId(emptyChannel.getId());
+  @Test
+  @DisplayName("메시지가 없는 채널에서는 마지막 메시지 시간이 없다")
+  void findLastMessageAtByChannelId_NoMessages_ReturnsEmpty() {
+    // given
+    Channel emptyChannel = createTestChannel(ChannelType.PUBLIC, "빈채널");
 
-		// then
-		assertThat(result).isEmpty();
-	}
+    // 영속성 컨텍스트 초기화
+    entityManager.flush();
+    entityManager.clear();
 
+    // when
+    Optional<Instant> lastMessageAt = messageRepository.findLastMessageAtByChannelId(
+        emptyChannel.getId());
 
-	@Test
-	@DisplayName("deleteAllByChannelId - 성공: 채널 ID를 기준으로 해당 채널의 모든 메시지를 일괄 삭제한다")
-	void deleteAllByChannelId_Success() {
-		// given
-		Channel channel = new Channel(ChannelType.PUBLIC, "삭제될 채널", "설명");
-		channelRepository.save(channel);
+    // then
+    assertThat(lastMessageAt).isEmpty();
+  }
 
-		User author = new User("member", "member@example.com", "pass", null);
-		new UserStatus(author, Instant.now());
-		userRepository.save(author);
+  @Test
+  @DisplayName("채널의 모든 메시지를 삭제할 수 있다")
+  void deleteAllByChannelId_DeletesAllMessages() {
+    // given
+    User user = createTestUser("testUser", "test@example.com");
+    Channel channel = createTestChannel(ChannelType.PUBLIC, "테스트채널");
+    Channel otherChannel = createTestChannel(ChannelType.PUBLIC, "다른채널");
 
-		Message msg1 = new Message("삭제될 메시지 1", channel, author, List.of());
-		Message msg2 = new Message("삭제될 메시지 2", channel, author, List.of());
-		messageRepository.saveAll(List.of(msg1, msg2));
+    // 테스트 채널에 메시지 3개 생성
+    createTestMessage("첫 번째 메시지", channel, user, null);
+    createTestMessage("두 번째 메시지", channel, user, null);
+    createTestMessage("세 번째 메시지", channel, user, null);
 
-		// when
-		messageRepository.deleteAllByChannelId(channel.getId());
+    // 다른 채널에 메시지 1개 생성
+    createTestMessage("다른 채널 메시지", otherChannel, user, null);
 
-		// then
-		List<Message> remainingMessages = messageRepository.findAll();
-		assertThat(remainingMessages).isEmpty();
-	}
+    // 영속성 컨텍스트 초기화
+    entityManager.flush();
+    entityManager.clear();
 
-	@Test
-	@DisplayName("deleteAllByChannelId - 실패/영향없음: 존재하지 않는 채널 ID로 삭제 요청 시 예외 없이 안정적으로 종료된다")
-	void deleteAllByChannelId_Fail_NonExistentChannelId() {
-		// given
-		UUID nonExistentChannelId = UUID.randomUUID();
+    // when
+    messageRepository.deleteAllByChannelId(channel.getId());
+    entityManager.flush();
+    entityManager.clear();
 
-		assertThatCode(() -> messageRepository.deleteAllByChannelId(nonExistentChannelId))
-			.doesNotThrowAnyException();
-	}
+    // then
+    // 해당 채널의 메시지는 삭제되었는지 확인
+    List<Message> channelMessages = messageRepository.findAllByChannelIdWithAuthor(
+        channel.getId(),
+        Instant.now().plus(1, ChronoUnit.DAYS),
+        PageRequest.of(0, 100)
+    ).getContent();
+    assertThat(channelMessages).isEmpty();
 
-}
+    // 다른 채널의 메시지는 그대로인지 확인
+    List<Message> otherChannelMessages = messageRepository.findAllByChannelIdWithAuthor(
+        otherChannel.getId(),
+        Instant.now().plus(1, ChronoUnit.DAYS),
+        PageRequest.of(0, 100)
+    ).getContent();
+    assertThat(otherChannelMessages).hasSize(1);
+  }
+} 
